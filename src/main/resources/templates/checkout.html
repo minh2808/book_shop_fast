@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - BookShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <i class="fas fa-book text-2xl text-blue-600"></i>
+                        <span class="text-xl font-bold text-gray-800">BookShop</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/cart" class="relative text-gray-700 hover:text-blue-600 transition">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span th:if="${cart != null and cart.cartItems != null and !cart.cartItems.isEmpty()}" 
+                              class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                              th:text="${#lists.size(cart.cartItems)}">0</span>
+                    </a>
+                    <div th:if="${user != null}" class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user-circle text-blue-600 text-xl"></i>
+                            <span class="text-gray-700 font-medium" th:text="${user.firstName != null and user.firstName != '' ? (user.firstName + ' ' + (user.lastName != null ? user.lastName : '')) : user.username}">User</span>
+                        </div>
+                        <a href="/logout" class="px-4 py-2 text-gray-700 hover:text-red-600 transition">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Error Message -->
+    <div th:if="${error}" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline" th:text="${error}">Lỗi</span>
+            <button onclick="this.parentElement.remove()" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Checkout Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">Thanh toán</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Checkout Form -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Shipping Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-truck mr-2 text-blue-600"></i>Thông tin giao hàng
+                    </h2>
+                    
+                    <form action="/checkout" method="post" id="checkoutForm">
+                        <!-- Chọn địa chỉ đã lưu -->
+                        <div th:if="${savedShippingAddresses != null and !savedShippingAddresses.isEmpty()}" class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Chọn địa chỉ đã lưu:</label>
+                            <div class="space-y-2">
+                                <label th:each="savedAddress : ${savedShippingAddresses}" 
+                                       class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition">
+                                    <input type="radio" 
+                                           name="selectedShippingId" 
+                                           th:value="${savedAddress.id}"
+                                           onchange="toggleShippingForm(false)"
+                                           class="mt-1 mr-3">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-800" th:text="${savedAddress.name}">Tên người nhận</p>
+                                        <p class="text-sm text-gray-600" 
+                                           th:text="${savedAddress.street + ', ' + savedAddress.district + ', ' + savedAddress.city + ', ' + savedAddress.country}">
+                                            Địa chỉ
+                                        </p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition">
+                                    <input type="radio" 
+                                           name="selectedShippingId" 
+                                           value=""
+                                           checked
+                                           onchange="toggleShippingForm(true)"
+                                           class="mt-1 mr-3">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-gray-800">Sử dụng địa chỉ mới</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="shippingForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tên người nhận *</label>
+                                <input type="text" 
+                                       name="name" 
+                                       id="shippingName"
+                                       required
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Nhập tên người nhận">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ *</label>
+                                <input type="text" 
+                                       name="street" 
+                                       id="shippingStreet"
+                                       required
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Số nhà, tên đường">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện *</label>
+                                    <input type="text" 
+                                           name="district" 
+                                           id="shippingDistrict"
+                                           required
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder="Quận/Huyện">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Thành phố *</label>
+                                    <input type="text" 
+                                           name="city" 
+                                           id="shippingCity"
+                                           required
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder="Thành phố">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quốc gia *</label>
+                                <input type="text" 
+                                       name="country" 
+                                       id="shippingCountry"
+                                       required
+                                       value="Việt Nam"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Information -->
+                        <div class="mt-8 pt-8 border-t">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                                <i class="fas fa-credit-card mr-2 text-blue-600"></i>Thông tin thanh toán
+                            </h2>
+                            
+                            <!-- Chọn phương thức thanh toán đã lưu -->
+                            <div th:if="${savedPaymentMethods != null and !savedPaymentMethods.isEmpty()}" class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Chọn phương thức thanh toán đã lưu:</label>
+                                <div class="space-y-2">
+                                    <label th:each="savedPayment : ${savedPaymentMethods}" 
+                                           class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition">
+                                        <input type="radio" 
+                                               name="selectedPaymentId" 
+                                               th:value="${savedPayment.id}"
+                                               onchange="togglePaymentForm(false)"
+                                               class="mt-1 mr-3">
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800" th:text="${savedPayment.holderName}">Tên chủ thẻ</p>
+                                            <p class="text-sm text-gray-600" 
+                                               th:text="${savedPayment.brand + ' •••• ' + savedPayment.last4 + ' (Hết hạn: ' + savedPayment.expiryMonth + '/' + savedPayment.expiryYear + ')'}">
+                                                Thông tin thẻ
+                                            </p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition">
+                                        <input type="radio" 
+                                               name="selectedPaymentId" 
+                                               value=""
+                                               checked
+                                               onchange="togglePaymentForm(true)"
+                                               class="mt-1 mr-3">
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">Sử dụng phương thức thanh toán mới</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="paymentForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tên chủ thẻ *</label>
+                                    <input type="text" 
+                                           name="holderName" 
+                                           id="paymentHolderName"
+                                           required
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder="Tên in trên thẻ">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Loại thẻ *</label>
+                                    <select name="brand" 
+                                            id="paymentBrand"
+                                            required
+                                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Chọn loại thẻ</option>
+                                        <option value="Visa">Visa</option>
+                                        <option value="Mastercard">Mastercard</option>
+                                        <option value="JCB">JCB</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Số thẻ (4 số cuối) *</label>
+                                    <input type="text" 
+                                           name="last4" 
+                                           id="paymentLast4"
+                                           required
+                                           maxlength="4"
+                                           pattern="[0-9]{4}"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder="1234">
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Tháng hết hạn *</label>
+                                        <input type="number" 
+                                               name="expiryMonth" 
+                                               id="paymentExpiryMonth"
+                                               required
+                                               min="1" 
+                                               max="12"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               placeholder="MM">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Năm hết hạn *</label>
+                                        <input type="number" 
+                                               name="expiryYear" 
+                                               id="paymentExpiryYear"
+                                               required
+                                               min="2024"
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               placeholder="YYYY">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Shipping Method -->
+                        <div class="mt-8 pt-8 border-t">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">Phương thức vận chuyển</h2>
+                            <div class="space-y-2">
+                                <label class="flex items-center p-4 border-2 border-blue-500 rounded-lg cursor-pointer">
+                                    <input type="radio" name="shippingMethod" value="Giao hàng tiêu chuẩn" checked class="mr-3">
+                                    <div>
+                                        <span class="font-semibold">Giao hàng tiêu chuẩn</span>
+                                        <p class="text-sm text-gray-600">Miễn phí - Giao trong 3-5 ngày</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
+                                    <input type="radio" name="shippingMethod" value="Giao hàng nhanh" class="mr-3">
+                                    <div>
+                                        <span class="font-semibold">Giao hàng nhanh</span>
+                                        <p class="text-sm text-gray-600">50,000 đ - Giao trong 1-2 ngày</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="mt-8">
+                            <button type="submit" 
+                                    class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-lg">
+                                <i class="fas fa-check-circle mr-2"></i>Xác nhận đặt hàng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Tóm tắt đơn hàng</h2>
+                    
+                    <!-- Cart Items -->
+                    <div class="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                        <div th:each="item : ${cart.cartItems}" class="flex items-center space-x-3 pb-3 border-b">
+                            <div class="w-16 h-20 bg-gray-200 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                <img th:src="${item.book.imageUrl != null ? item.book.imageUrl : 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1436202607i/3735293.jpg'}" 
+                                     alt="Book cover" 
+                                     class="w-full h-full object-cover rounded">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 truncate" th:text="${item.book.title}">Tên sách</p>
+                                <p class="text-xs text-gray-600" th:text="${'x' + item.quantity}">x1</p>
+                                <p class="text-sm font-semibold text-blue-600" 
+                                   th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 pt-4 border-t">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Tạm tính:</span>
+                            <span th:text="${#numbers.formatDecimal(cart.grandTotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Phí vận chuyển:</span>
+                            <span>Miễn phí</span>
+                        </div>
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between text-xl font-bold text-gray-800">
+                                <span>Tổng cộng:</span>
+                                <span class="text-blue-600" 
+                                      th:text="${#numbers.formatDecimal(cart.grandTotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="/cart" class="block w-full text-center mt-4 px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                        <i class="fas fa-arrow-left mr-2"></i>Quay lại giỏ hàng
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleShippingForm(show) {
+            const form = document.getElementById('shippingForm');
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.disabled = !show;
+                if (!show) {
+                    input.removeAttribute('required');
+                } else {
+                    input.setAttribute('required', 'required');
+                }
+            });
+        }
+        
+        function togglePaymentForm(show) {
+            const form = document.getElementById('paymentForm');
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.disabled = !show;
+                if (!show) {
+                    input.removeAttribute('required');
+                } else {
+                    input.setAttribute('required', 'required');
+                }
+            });
+        }
+        
+        // Initialize forms
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedShipping = document.querySelector('input[name="selectedShippingId"]:checked');
+            if (selectedShipping && selectedShipping.value !== '') {
+                toggleShippingForm(false);
+            }
+            
+            const selectedPayment = document.querySelector('input[name="selectedPaymentId"]:checked');
+            if (selectedPayment && selectedPayment.value !== '') {
+                togglePaymentForm(false);
+            }
+        });
+    </script>
+</body>
+</html>
+

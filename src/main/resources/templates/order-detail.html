@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn hàng - BookShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <i class="fas fa-book text-2xl text-blue-600"></i>
+                        <span class="text-xl font-bold text-gray-800">BookShop</span>
+                    </a>
+                </div>
+                
+                <div class="flex-1 max-w-xl mx-8">
+                    <form action="/search" method="get" class="relative">
+                        <input 
+                            type="text" 
+                            name="keyword" 
+                            placeholder="Tìm kiếm sách, tác giả..." 
+                            class="w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                        <button type="submit" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/cart" class="relative text-gray-700 hover:text-blue-600 transition">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span th:if="${cart != null and cart.cartItems != null and !cart.cartItems.isEmpty()}" 
+                              class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                              th:text="${#lists.size(cart.cartItems)}">0</span>
+                    </a>
+                    <div th:if="${user != null}" class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user-circle text-blue-600 text-xl"></i>
+                            <span class="text-gray-700 font-medium" th:text="${user.firstName != null and user.firstName != '' ? (user.firstName + ' ' + (user.lastName != null ? user.lastName : '')) : user.username}">User</span>
+                        </div>
+                        <a href="/logout" class="px-4 py-2 text-gray-700 hover:text-red-600 transition">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Order Detail Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Breadcrumb -->
+        <div class="mb-6">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2 text-sm">
+                    <li><a href="/" class="text-gray-500 hover:text-blue-600">Trang chủ</a></li>
+                    <li><i class="fas fa-chevron-right text-gray-400 text-xs"></i></li>
+                    <li><a href="/orders" class="text-gray-500 hover:text-blue-600">Đơn hàng của tôi</a></li>
+                    <li><i class="fas fa-chevron-right text-gray-400 text-xs"></i></li>
+                    <li class="text-gray-800 font-medium" th:text="${order.orderCode}">Mã đơn hàng</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline" th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline" th:text="${error}"></span>
+        </div>
+        
+        <!-- Order Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                        Đơn hàng: <span class="text-blue-600" th:text="${order.orderCode}">ORD-XXXXXXXX</span>
+                    </h1>
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-calendar mr-2"></i>
+                        Ngày đặt:
+                        <span th:text="${#dates.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">Ngày</span>
+                    </p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <span class="px-4 py-2 rounded-full text-sm font-semibold"
+                          th:class="${order.orderStatus == 'Đang xử lý' ? 'bg-yellow-100 text-yellow-800' : 
+                                    (order.orderStatus == 'Đang giao hàng' ? 'bg-blue-100 text-blue-800' : 
+                                    (order.orderStatus == 'Đã giao hàng' ? 'bg-green-100 text-green-800' : 
+                                    (order.orderStatus == 'Đã hủy' ? 'bg-red-100 text-red-800' : 
+                                    'bg-gray-100 text-gray-800')))}"
+                          th:text="${order.orderStatus}">Trạng thái</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Order Items -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Order Items List -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Sản phẩm đã đặt</h2>
+                    
+                    <div th:if="${order.orderItems != null && !order.orderItems.isEmpty()}" class="space-y-4">
+                        <div th:each="item : ${order.orderItems}" class="flex items-center space-x-4 pb-4 border-b last:border-0">
+                            <div class="w-20 h-24 bg-gray-200 rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                <img th:src="${item.book.imageUrl != null ? item.book.imageUrl : 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1436202607i/3735293.jpg'}" 
+                                     alt="Book cover" 
+                                     class="w-full h-full object-cover rounded">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-800 mb-1">
+                                    <a th:href="@{/book/{id}(id=${item.book.id})}" 
+                                       th:text="${item.book.title}" 
+                                       class="hover:text-blue-600">Tên sách</a>
+                                </h3>
+                                <p class="text-sm text-gray-600 mb-2" th:text="${'Tác giả: ' + item.book.author}">Tác giả</p>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm text-gray-600" th:text="${'Số lượng: ' + item.quantity}">Số lượng</p>
+                                    <p class="font-semibold text-blue-600" 
+                                       th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shipping Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-truck mr-2 text-blue-600"></i>Thông tin giao hàng
+                    </h2>
+                    <div class="space-y-2 text-gray-600">
+                        <p><span class="font-semibold">Người nhận:</span> <span th:text="${order.userShipping.name}">Tên</span></p>
+                        <p><span class="font-semibold">Địa chỉ:</span> 
+                            <span th:text="${order.userShipping.street + ', ' + order.userShipping.district + ', ' + order.userShipping.city + ', ' + order.userShipping.country}">
+                                Địa chỉ
+                            </span>
+                        </p>
+                        <p><span class="font-semibold">Phương thức:</span> <span th:text="${order.shippingMethod}">Giao hàng</span></p>
+                        <p th:if="${order.shippingDate != null}">
+                            <span class="font-semibold">Dự kiến giao:</span> 
+                            <span th:text="${#dates.format(order.shippingDate, 'dd/MM/yyyy')}">Ngày</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-credit-card mr-2 text-blue-600"></i>Thông tin thanh toán
+                    </h2>
+                    <div class="space-y-2 text-gray-600">
+                        <p><span class="font-semibold">Chủ thẻ:</span> <span th:text="${order.userPayment.holderName}">Tên</span></p>
+                        <p><span class="font-semibold">Loại thẻ:</span> <span th:text="${order.userPayment.brand}">Loại</span></p>
+                        <p><span class="font-semibold">Số thẻ:</span> <span th:text="'•••• ' + ${order.userPayment.last4}">Số thẻ</span></p>
+                        <p><span class="font-semibold">Hết hạn:</span> 
+                            <span th:text="${order.userPayment.expiryMonth + '/' + order.userPayment.expiryYear}">MM/YYYY</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Tóm tắt đơn hàng</h2>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Tạm tính:</span>
+                            <span th:text="${#numbers.formatDecimal(order.orderTotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Phí vận chuyển:</span>
+                            <span>Miễn phí</span>
+                        </div>
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between text-xl font-bold text-gray-800">
+                                <span>Tổng cộng:</span>
+                                <span class="text-blue-600" 
+                                      th:text="${#numbers.formatDecimal(order.orderTotal, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <a href="/orders" 
+                           class="block w-full text-center px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+                            <i class="fas fa-arrow-left mr-2"></i>Quay lại danh sách đơn hàng
+                        </a>
+                        <form th:if="${order.orderStatus == 'Đang xử lý'}" 
+                              th:action="@{/orders/{id}/cancel(id=${order.id})}" 
+                              method="post" 
+                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
+                            <button type="submit" 
+                                    class="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                <i class="fas fa-times mr-2"></i>Hủy đơn hàng
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Về BookShop</h3>
+                    <p class="text-gray-400 text-sm">Nền tảng mua sách online uy tín, đa dạng thể loại với giá cả hợp lý.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Hỗ trợ</h3>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white">Câu hỏi thường gặp</a></li>
+                        <li><a href="#" class="hover:text-white">Hướng dẫn mua hàng</a></li>
+                        <li><a href="#" class="hover:text-white">Chính sách đổi trả</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Liên hệ</h3>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><i class="fas fa-phone mr-2"></i>0123 456 789</li>
+                        <li><i class="fas fa-envelope mr-2"></i>support@bookshop.com</li>
+                        <li><i class="fas fa-map-marker-alt mr-2"></i>Hà Nội, Việt Nam</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Theo dõi chúng tôi</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
+                <p>&copy; 2024 BookShop. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

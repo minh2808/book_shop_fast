@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - BookShop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        /* Tùy chỉnh thanh cuộn cho đẹp hơn */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-white">
+
+<div class="flex min-h-screen">
+    <!-- LEFT SIDE: Form Section -->
+    <div class="flex flex-col justify-center flex-1 px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 w-full lg:w-1/2 bg-white overflow-y-auto">
+        <div class="mx-auto w-full max-w-sm lg:w-[28rem]"> <!-- Tăng chiều rộng form một chút so với login -->
+
+            <!-- Header -->
+            <div>
+                <a href="/" class="flex items-center gap-2 text-blue-600 hover:opacity-80 transition">
+                    <i class="fas fa-book text-3xl"></i>
+                    <span class="text-2xl font-bold text-gray-900">BookShop</span>
+                </a>
+                <h2 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+                    Tạo tài khoản mới
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Đã là thành viên?
+                    <a href="/login" class="font-medium text-blue-600 hover:text-blue-500 transition">
+                        Đăng nhập tại đây
+                    </a>
+                </p>
+            </div>
+
+            <!-- Error Message -->
+            <div th:if="${error}" class="mt-6 flex items-center p-4 text-sm text-red-800 border border-red-200 rounded-lg bg-red-50" role="alert">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span th:text="${error}">Thông tin không hợp lệ</span>
+            </div>
+
+            <!-- Form -->
+            <div class="mt-8">
+                <form action="/register" method="post" th:object="${user}" class="space-y-5">
+
+                    <!-- Username -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username <span class="text-red-500">*</span></label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-gray-400 sm:text-sm"></i>
+                            </div>
+                            <input id="username" name="username" type="text" required th:field="*{username}"
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                   placeholder="Chọn tên đăng nhập">
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400 sm:text-sm"></i>
+                            </div>
+                            <input id="email" name="email" type="email" required th:field="*{email}"
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                   >
+                        </div>
+                    </div>
+
+                    <!-- Full Name (2 Columns) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-gray-700">Họ</label>
+                            <input id="lastName" name="lastName" type="text" th:field="*{lastName}"
+                                   class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                   >
+                        </div>
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-gray-700">Tên</label>
+                            <input id="firstName" name="firstName" type="text" th:field="*{firstName}"
+                                   class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                   >
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-phone text-gray-400 sm:text-sm"></i>
+                            </div>
+                            <input id="phone" name="phone" type="tel" th:field="*{phone}"
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                   >
+                        </div>
+                    </div>
+
+                    <!-- Password & Confirm (2 Columns on tablet/desktop for compactness) -->
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu <span class="text-red-500">*</span></label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400 sm:text-sm"></i>
+                                </div>
+                                <input id="password" name="password" type="password" required th:field="*{password}"
+                                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                       placeholder="••••••••">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Nhập lại MK <span class="text-red-500">*</span></label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-check-circle text-gray-400 sm:text-sm"></i>
+                                </div>
+                                <input id="confirmPassword" name="confirmPassword" type="password" required
+                                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition"
+                                       placeholder="••••••••">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Checkbox (Optional but makes it look pro) -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="terms" name="terms" type="checkbox" required
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="terms" class="font-medium text-gray-700 cursor-pointer">Tôi đồng ý với các <a href="#" class="text-blue-600 hover:underline">điều khoản</a> và <a href="#" class="text-blue-600 hover:underline">chính sách</a>.</label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div>
+                        <button type="submit"
+                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 transform hover:-translate-y-0.5">
+                            Đăng ký tài khoản
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Divider -->
+                <div class="mt-8 border-t border-gray-200 pt-6">
+                    <p class="text-center text-sm text-gray-500 mb-4">Hoặc đăng ký nhanh bằng</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" class="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                            <i class="fab fa-google text-red-500 text-lg mr-2"></i> Google
+                        </button>
+                        <button type="button" class="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+                            <i class="fab fa-facebook text-blue-600 text-lg mr-2"></i> Facebook
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Image Section -->
+    <div class="hidden lg:block relative w-0 flex-1">
+        <div class="absolute inset-0 bg-blue-900/20 mix-blend-multiply z-10"></div>
+
+        <img class="absolute inset-0 h-full w-full object-cover"
+             src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=1920&auto=format&fit=crop"
+             alt="BookShop Background">
+
+        <div class="absolute bottom-0 left-0 right-0 p-12 z-20 text-white bg-gradient-to-t from-black/70 to-transparent">
+            <h3 class="text-3xl font-bold">Thế giới tri thức trong tầm tay</h3>
+            <p class="mt-2 text-lg text-gray-200">Khám phá hàng ngàn đầu sách hấp dẫn và phát triển bản thân mỗi ngày.</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
