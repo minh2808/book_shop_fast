@@ -26,7 +26,9 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model, HttpSession session) {
         List<Book> books = bookService.findAllActiveBooks();
+        List<String> categories = bookService.findAllDistinctCategories();
         model.addAttribute("books", books);
+        model.addAttribute("categories", categories);
         User user = (User) session.getAttribute("user");
         if (user != null) {
             model.addAttribute("user", user);
@@ -47,8 +49,10 @@ public class HomeController {
         } else {
             books = bookService.findAllActiveBooks();
         }
+        List<String> categories = bookService.findAllDistinctCategories();
         model.addAttribute("books", books);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("categories", categories);
         User user = (User) session.getAttribute("user");
         if (user != null) {
             model.addAttribute("user", user);
@@ -61,8 +65,10 @@ public class HomeController {
     @GetMapping("/category")
     public String category(@RequestParam String category, Model model, HttpSession session) {
         List<Book> books = bookService.findByCategory(category);
+        List<String> categories = bookService.findAllDistinctCategories();
         model.addAttribute("books", books);
         model.addAttribute("category", category);
+        model.addAttribute("categories", categories);
         User user = (User) session.getAttribute("user");
         if (user != null) {
             model.addAttribute("user", user);

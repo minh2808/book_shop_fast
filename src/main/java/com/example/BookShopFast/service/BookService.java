@@ -45,5 +45,9 @@ public class BookService {
     public void deleteById(Long id) {
         bookRepository.deleteById(id);
     }
+    
+    public List<String> findAllDistinctCategories() {
+        return bookRepository.findDistinctCategories();
+    }
 }
 

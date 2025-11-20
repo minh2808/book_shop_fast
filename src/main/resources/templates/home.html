@@ -110,25 +110,14 @@
     </section>
 
     <!-- Categories -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" th:if="${categories != null && !categories.isEmpty()}">
         <div class="flex flex-wrap gap-4 justify-center">
-            <a href="/category?category=Tiểu thuyết" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Tiểu thuyết
-            </a>
-            <a href="/category?category=Khoa học" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Khoa học
-            </a>
-            <a href="/category?category=Lịch sử" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Lịch sử
-            </a>
-            <a href="/category?category=Kinh doanh" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Kinh doanh
-            </a>
-            <a href="/category?category=Self-help" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Self-help
-            </a>
-            <a href="/category?category=Thiếu nhi" class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition">
-                Thiếu nhi
+            <a th:each="cat : ${categories}" 
+               th:href="@{/category(category=${cat})}" 
+               th:text="${cat}"
+               class="px-6 py-2 bg-white rounded-full shadow-sm hover:bg-blue-50 hover:text-blue-600 transition"
+               th:classappend="${category != null && category == cat ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}">
+                Category
             </a>
         </div>
     </section>
